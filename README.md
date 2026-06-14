@@ -16,7 +16,7 @@ FlyChatter is an intelligent, automated flight search assistant designed as a Wh
 
 # Tech Stack
 
-    Framework: .NET 8/9, .NET Aspire
+    Framework: .NET 9, .NET Aspire
 
     Language: C#
 
