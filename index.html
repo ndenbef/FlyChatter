@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlyChatter — Flight Search on WhatsApp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0F1E;
+      --bg2: #0D1428;
+      --blue: #2D6FF7;
+      --cyan: #00D4FF;
+      --white: #F0F4FF;
+      --muted: #8899BB;
+      --card: #111827;
+      --border: rgba(45,111,247,0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      background: rgba(10,15,30,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 1.3rem;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      background: var(--blue); color: var(--white);
+      padding: 0.5rem 1.3rem; border-radius: 6px;
+      text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 6rem 2rem 4rem;
+      position: relative; text-align: center;
+      overflow: hidden;
+    }
+
+    /* Animated globe SVG */
+    .globe-wrap {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(700px, 100vw); height: min(700px, 100vw);
+      opacity: 0.07; pointer-events: none;
+    }
+    .globe-wrap svg { width: 100%; height: 100%; }
+
+    .hero-eyebrow {
+      font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 1.4rem; font-weight: 500;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: ''; display: block; height: 1px; width: 32px;
+      background: var(--cyan); opacity: 0.5;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 700; line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+    h1 span {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      max-width: 520px; color: var(--muted);
+      font-size: 1.1rem; line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: #fff; padding: 0.85rem 2rem;
+      border-radius: 8px; text-decoration: none;
+      font-weight: 600; font-size: 0.95rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 24px rgba(45,111,247,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 36px rgba(0,212,255,0.4); }
+    .btn-ghost {
+      border: 1px solid var(--border); color: var(--white);
+      padding: 0.85rem 2rem; border-radius: 8px;
+      text-decoration: none; font-size: 0.95rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--cyan); background: rgba(0,212,255,0.05); }
+
+    /* Chat mockup */
+    .chat-preview {
+      margin-top: 4rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: min(400px, 90vw);
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(45,111,247,0.1);
+    }
+    .chat-header {
+      background: #1a2340;
+      padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .chat-name { font-weight: 600; font-size: 0.9rem; }
+    .chat-status { font-size: 0.75rem; color: #25D366; }
+    .chat-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
+
+    .msg { max-width: 80%; padding: 0.65rem 0.9rem; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; }
+    .msg-user { background: #1f3a8a; align-self: flex-end; border-bottom-right-radius: 3px; }
+    .msg-bot { background: #1a2340; border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 3px; }
+    .msg-bot strong { color: var(--cyan); }
+    .msg-time { font-size: 0.65rem; color: var(--muted); margin-top: 0.3rem; text-align: right; }
+
+    /* FEATURES */
+    section { padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 1rem; font-weight: 500;
+    }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700; margin-bottom: 1rem; line-height: 1.2;
+    }
+    .section-sub { color: var(--muted); max-width: 500px; line-height: 1.7; margin-bottom: 3.5rem; }
+
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 2rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .feature-card:hover { border-color: rgba(0,212,255,0.4); transform: translateY(-4px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(45,111,247,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 1.2rem;
+      border: 1px solid rgba(45,111,247,0.2);
+    }
+    .feature-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem; font-weight: 600; margin-bottom: 0.6rem;
+    }
+    .feature-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* TECH STACK */
+    .stack-section { background: var(--bg2); padding: 5rem 2rem; }
+    .stack-inner { max-width: 1100px; margin: 0 auto; }
+    .stack-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2.5rem; }
+    .stack-badge {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 1.2rem;
+      font-size: 0.85rem; font-weight: 500; color: var(--white);
+      display: flex; align-items: center; gap: 0.5rem;
+      transition: border-color 0.2s;
+    }
+    .stack-badge:hover { border-color: var(--blue); }
+    .stack-badge span { font-size: 1rem; }
+
+    /* HOW IT WORKS */
+    .steps { display: flex; flex-direction: column; gap: 0; position: relative; max-width: 700px; }
+    .steps::before {
+      content: ''; position: absolute; left: 23px; top: 0; bottom: 0;
+      width: 1px; background: var(--border);
+    }
+    .step { display: flex; gap: 1.5rem; padding-bottom: 2.5rem; position: relative; }
+    .step-num {
+      width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem;
+      position: relative; z-index: 1;
+    }
+    .step-content { padding-top: 0.6rem; }
+    .step-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .step-content p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* STATUS BADGE */
+    .status-section { text-align: center; padding: 5rem 2rem; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(45,111,247,0.1); border: 1px solid rgba(45,111,247,0.3);
+      border-radius: 100px; padding: 0.5rem 1.2rem;
+      font-size: 0.85rem; color: var(--cyan); margin-bottom: 1.5rem;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #25D366; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem; text-align: center;
+      color: var(--muted); font-size: 0.85rem;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { color: var(--cyan); }
+
+    /* Flight path animation in hero */
+    @keyframes dash { to { stroke-dashoffset: 0; } }
+    .flight-path {
+      stroke-dasharray: 300;
+      stroke-dashoffset: 300;
+      animation: dash 3s ease-in-out infinite alternate;
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem 1.2rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">✈ FlyChatter</div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#stack">Tech Stack</a></li>
+  </ul>
+  <a href="https://github.com/ndenbef/FlyChatter" class="nav-cta" target="_blank">GitHub →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <!-- Globe background -->
+  <div class="globe-wrap">
+    <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="250" cy="250" r="220" fill="none" stroke="#2D6FF7" stroke-width="1"/>
+      <ellipse cx="250" cy="250" rx="220" ry="80" fill="none" stroke="#2D6FF7" stroke-width="0.8"/>
+      <ellipse cx="250" cy="250" rx="220" ry="140" fill="none" stroke="#2D6FF7" stroke-width="0.8"/>
+      <line x1="30" y1="250" x2="470" y2="250" stroke="#2D6FF7" stroke-width="0.8"/>
+      <line x1="250" y1="30" x2="250" y2="470" stroke="#2D6FF7" stroke-width="0.8"/>
+      <path class="flight-path" d="M80 310 Q180 120 320 200 Q390 240 430 180" fill="none" stroke="#00D4FF" stroke-width="2"/>
+      <circle cx="80" cy="310" r="5" fill="#00D4FF"/>
+      <circle cx="430" cy="180" r="5" fill="#00D4FF"/>
+    </svg>
+  </div>
+
+  <div class="hero-eyebrow">WhatsApp × AI × Aviation</div>
+  <h1>Search flights<br/>inside <span>WhatsApp</span></h1>
+  <p class="hero-sub">FlyChatter is an intelligent bot that finds real-time flight deals for you — no apps, no websites, just a message.</p>
+  <div class="hero-buttons">
+    <a href="#how" class="btn-primary">See how it works</a>
+    <a href="https://github.com/ndenbef/FlyChatter" class="btn-ghost" target="_blank">View on GitHub</a>
+  </div>
+
+  <!-- Chat preview -->
+  <div class="chat-preview">
+    <div class="chat-header">
+      <div class="chat-avatar">✈</div>
+      <div>
+        <div class="chat-name">FlyChatter</div>
+        <div class="chat-status">● Online</div>
+      </div>
+    </div>
+    <div class="chat-body">
+      <div class="msg msg-user">Douala → Paris, 20 July, budget $600</div>
+      <div class="msg-time">10:42</div>
+      <div class="msg msg-bot">
+        <strong>✈ 3 flights found</strong><br/><br/>
+        🥇 Air France · DLA→CDG<br/>
+        Dep 08:15 · 7h30 · <strong style="color:#25D366">$487</strong><br/><br/>
+        🥈 Turkish Airlines · DLA→CDG<br/>
+        Dep 14:00 · 9h45 · <strong style="color:#25D366">$523</strong><br/><br/>
+        <span style="color:var(--muted); font-size:0.8rem">Reply with a number to book →</span>
+      </div>
+      <div class="msg-time">10:42</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">What it does</div>
+  <h2 class="section-title">Everything you need,<br/>inside one chat</h2>
+  <p class="section-sub">No new app to install. No account to create. Just open WhatsApp and ask.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h3>Natural Language Search</h3>
+      <p>Send a message like you'd text a friend. FlyChatter understands origin, destination, date, and budget automatically.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Real-time Pricing</h3>
+      <p>Live data from Travelpayouts and Kiwi Tequila APIs. Prices are always up-to-date, not cached results from yesterday.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏗️</div>
+      <h3>Microservices Architecture</h3>
+      <p>Built with .NET Aspire for reliability and scale. Each service is independent, so the system stays fast under load.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Secure & Private</h3>
+      <p>Your searches stay between you and the bot. No data sold, no profile built, no ads — just flight results.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌍</div>
+      <h3>Global Coverage</h3>
+      <p>Search flights worldwide. Domestic, international, one-way or return — FlyChatter handles all routes.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>Zero Friction</h3>
+      <p>Works on any phone with WhatsApp. No download, no registration, no learning curve. Type and go.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">The flow</div>
+  <h2 class="section-title">From message<br/>to boarding pass</h2>
+  <p class="section-sub">Four steps between you and your next flight deal.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Send a message</h3>
+        <p>Text your trip details to the FlyChatter WhatsApp number — origin, destination, date, and optionally your budget.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Intent is parsed</h3>
+        <p>The backend extracts structured data from your natural language message and validates the search parameters.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>APIs are queried</h3>
+        <p>FlyChatter hits Travelpayouts and Kiwi Tequila in real-time to fetch the freshest prices and availability.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Results delivered</h3>
+        <p>A curated list of the best options lands in your WhatsApp chat within seconds, ready to book.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<div class="stack-section" id="stack">
+  <div class="stack-inner">
+    <div class="section-label">Built with</div>
+    <h2 class="section-title">The stack</h2>
+    <div class="stack-grid">
+      <div class="stack-badge"><span>🔷</span> .NET 9</div>
+      <div class="stack-badge"><span>☁️</span> .NET Aspire</div>
+      <div class="stack-badge"><span>🌐</span> ASP.NET Core</div>
+      <div class="stack-badge"><span>💬</span> WhatsApp / Twilio</div>
+      <div class="stack-badge"><span>✈</span> Travelpayouts API</div>
+      <div class="stack-badge"><span>🐦</span> Kiwi Tequila API</div>
+      <div class="stack-badge"><span>🐳</span> Docker</div>
+      <div class="stack-badge"><span>🏛️</span> Clean Architecture</div>
+      <div class="stack-badge"><span>🐧</span> Ubuntu / Linux</div>
+      <div class="stack-badge"><span>⌨️</span> C#</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS -->
+<div class="status-section">
+  <div class="status-badge"><div class="status-dot"></div> Active development</div>
+  <h2 class="section-title" style="margin-bottom:1rem;">Coming soon.</h2>
+  <p style="color:var(--muted); max-width:420px; margin:0 auto 2rem; line-height:1.7;">FlyChatter is being actively built. Star the repo to follow the journey and get notified at launch.</p>
+  <a href="https://github.com/ndenbef/FlyChatter" class="btn-primary" target="_blank">⭐ Star on GitHub</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Built with ♥ by <a href="https://github.com/ndenbef" target="_blank">@TON_USERNAME</a> ·
+  <a href="https://github.com/ndenbef/FlyChatter" target="_blank">GitHub</a>
+</footer>
+
+</body>
+</html>
