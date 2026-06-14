@@ -1,0 +1,6 @@
+@FlyChatter_HostAddress = http://localhost:5065
+
+GET {{FlyChatter_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
